@@ -75,11 +75,13 @@ Mục đích chính của dự án này là cung cấp một giao diện lập t
 
     Khi chạy, server sẽ lắng nghe các yêu cầu MCP từ stdin và gửi phản hồi qua stdout.
 
-## Kết nối và Sử dụng qua JSON
+## Kết nối và Sử dụng
 
-Để kết nối **MCP-ADB** với Manus AI, Claude Desktop hoặc các ứng dụng hỗ trợ MCP khác, bạn sử dụng cấu hình JSON sau:
+Bạn có thể kết nối **MCP-ADB** theo hai cách: qua **Standard I/O (stdio)** hoặc qua **HTTP SSE (URL)**.
 
-### Cấu hình JSON mẫu
+### Cách 1: Kết nối qua Standard I/O (Khuyên dùng cho AI Agent cục bộ)
+
+Sử dụng cấu hình JSON sau trong ứng dụng của bạn (Manus AI, Claude Desktop, Cursor):
 
 ```json
 {
@@ -96,6 +98,32 @@ Mục đích chính của dự án này là cung cấp một giao diện lập t
   }
 }
 ```
+
+### Cách 2: Kết nối qua HTTP SSE (Sử dụng URL)
+
+Nếu bạn muốn chạy server như một dịch vụ web và kết nối qua URL:
+
+1.  **Khởi chạy server ở chế độ SSE:**
+    ```bash
+    pnpm run start:sse
+    ```
+    Mặc định server sẽ chạy tại `http://localhost:3000`. Bạn có thể đổi port bằng biến môi trường `PORT=4000`.
+
+2.  **Địa chỉ kết nối (Endpoint):**
+    Sử dụng URL sau để kết nối trong ứng dụng hỗ trợ MCP:
+    `http://localhost:3000/sse`
+
+3.  **Cấu hình JSON (nếu cần):**
+    Một số ứng dụng yêu cầu cấu hình JSON cho SSE như sau:
+    ```json
+    {
+      "mcpServers": {
+        "mcp-adb": {
+          "url": "http://localhost:3000/sse"
+        }
+      }
+    }
+    ```
 
 ### Cách thiết lập trên Manus AI
 1.  Vào **Settings** -> **Integrations** -> **Custom MCP Servers**.

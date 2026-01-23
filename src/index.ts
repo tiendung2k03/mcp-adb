@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { z } from "zod";
 import { exec } from "child_process";
 import { promisify } from "util";
@@ -8,6 +9,7 @@ import path from "path";
 import toml from "toml";
 import { fileURLToPath } from "url";
 import os from "os";
+import express from "express";
 
 const execPromise = promisify(exec);
 const __filename = fileURLToPath(import.meta.url);
@@ -20,7 +22,6 @@ const rootPath = path.resolve(__dirname, "..");
  * Helper to get a temporary directory compatible with Termux and Linux
  */
 function getTempDir() {
-  // In Termux, /tmp might not exist or be writable, use os.tmpdir()
   return os.tmpdir();
 }
 
@@ -89,7 +90,6 @@ server.tool(
     const tempDir = getTempDir();
     const tempFile = path.join(tempDir, `view-${Date.now()}.xml`);
     try {
-      // For Termux compatibility, we use a more robust way to handle temp files
       await execPromise(`adb ${deviceArg}shell uiautomator dump /sdcard/view.xml`);
       await execPromise(`adb ${deviceArg}pull /sdcard/view.xml ${tempFile}`);
       const content = fs.readFileSync(tempFile, "utf-8");
@@ -197,9 +197,35 @@ try {
 }
 
 async function main() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  console.error("MCP-ADB Server running on stdio");
+  const mode = process.env.MCP_MODE || "stdio";
+
+  if (mode === "sse") {
+    const app = express();
+    const port = parseInt(process.env.PORT || "3000");
+    let transport: SSEServerTransport | null = null;
+
+    app.get("/sse", async (req, res) => {
+      console.error("New SSE connection");
+      transport = new SSEServerTransport("/messages", res);
+      await server.connect(transport);
+    });
+
+    app.post("/messages", async (req, res) => {
+      if (transport) {
+        await transport.handlePostMessage(req, res);
+      } else {
+        res.status(400).send("No active SSE connection");
+      }
+    });
+
+    app.listen(port, () => {
+      console.error(`MCP-ADB Server running on SSE at http://localhost:${port}/sse`);
+    });
+  } else {
+    const transport = new StdioServerTransport();
+    await server.connect(transport);
+    console.error("MCP-ADB Server running on stdio");
+  }
 }
 
 main().catch((error) => {
