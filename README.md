@@ -75,15 +75,38 @@ Mục đích chính của dự án này là cung cấp một giao diện lập t
 
     Khi chạy, server sẽ lắng nghe các yêu cầu MCP từ stdin và gửi phản hồi qua stdout.
 
-## Tích hợp với Manus AI
+## Kết nối và Sử dụng qua JSON
 
-Để kết nối **MCP-ADB** với Manus AI, bạn cần cấu hình nó như một **Custom MCP Server** trong cài đặt tích hợp của Manus.
+Để kết nối **MCP-ADB** với Manus AI, Claude Desktop hoặc các ứng dụng hỗ trợ MCP khác, bạn sử dụng cấu hình JSON sau:
 
-1.  **Triển khai Server:** Bạn cần triển khai server này trên một máy chủ mà Manus AI có thể truy cập. Vì server này sử dụng giao thức stdio, nó thường được khởi chạy trực tiếp trong môi trường sandbox của tác nhân AI.
-2.  **Cấu hình trong Manus:**
-    *   Trong giao diện Manus, điều hướng đến **Settings** -> **Integrations** -> **Custom MCP Servers**.
-    *   Thêm một server mới với các thông tin cần thiết (tên, mô tả).
-    *   **Lưu ý**: Đối với các server stdio, việc tích hợp thường được xử lý tự động bởi môi trường tác nhân. Nếu bạn triển khai server này như một dịch vụ HTTP/HTTPS độc lập, bạn sẽ cần cung cấp **Server URL** và **Authentication** (nếu có).
+### Cấu hình JSON mẫu
+
+```json
+{
+  "mcpServers": {
+    "mcp-adb": {
+      "command": "node",
+      "args": [
+        "/đường/dẫn/tới/mcp-adb/dist/index.js"
+      ],
+      "env": {
+        "PATH": "/usr/local/bin:/usr/bin:/bin:/đường/dẫn/tới/adb"
+      }
+    }
+  }
+}
+```
+
+### Cách thiết lập trên Manus AI
+1.  Vào **Settings** -> **Integrations** -> **Custom MCP Servers**.
+2.  Chọn **Add Server** hoặc **Import JSON**.
+3.  Dán đoạn mã JSON ở trên (đã thay đổi đường dẫn thực tế của bạn).
+4.  Manus sẽ nhận diện các công cụ như `adb_devices`, `screenshot`, `inspect_ui` và hơn 150 công cụ điều khiển khác.
+
+### Cách thiết lập trên Claude Desktop
+1.  Mở file `claude_desktop_config.json` (trong `%APPDATA%\Claude` trên Windows hoặc `~/Library/Application Support/Claude` trên macOS).
+2.  Thêm mục `mcp-adb` vào phần `mcpServers`.
+3.  Khởi động lại Claude.
 
 ## Cấu trúc Dự án
 
