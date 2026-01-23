@@ -110,11 +110,10 @@ Nếu bạn muốn chạy server như một dịch vụ web và kết nối qua 
     Mặc định server sẽ chạy tại `http://localhost:3000`. Bạn có thể đổi port bằng biến môi trường `PORT=4000`.
 
 2.  **Địa chỉ kết nối (Endpoint):**
-    Sử dụng URL sau để kết nối trong ứng dụng hỗ trợ MCP:
-    `http://localhost:3000/sse`
+    - **Cục bộ (Cùng mạng Wi-Fi):** `http://<IP_ĐIỆN_THOẠI>:3000/sse`
+    - **Từ xa (Mạng khác nhau):** Xem hướng dẫn [Kết nối từ xa (Remote Access)](./remote-access-guide.md) để sử dụng Cloudflare Tunnel hoặc LocalTunnel.
 
 3.  **Cấu hình JSON (nếu cần):**
-    Một số ứng dụng yêu cầu cấu hình JSON cho SSE như sau:
     ```json
     {
       "mcpServers": {
