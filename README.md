@@ -26,7 +26,9 @@ Mục đích chính của dự án này là cung cấp một giao diện lập t
 
 *   **Node.js** (Phiên bản 18 trở lên)
 *   **pnpm** (hoặc npm/yarn)
-*   **Android Debug Bridge (ADB)** đã được cài đặt và có thể truy cập từ biến môi trường `PATH`.
+*   **Android Debug Bridge (ADB)**:
+    *   Trên Linux/macOS: Cài đặt qua trình quản lý gói (ví dụ: `sudo apt install android-tools-adb`).
+    *   Trên **Termux (Android)**: Cài đặt qua `pkg install android-tools`.
 
 ### Các bước cài đặt
 
@@ -44,6 +46,24 @@ Mục đích chính của dự án này là cung cấp một giao diện lập t
 3.  **Build Dự án:**
     ```bash
     pnpm run build
+    ```
+
+### Hướng dẫn riêng cho Termux
+
+Để chạy MCP-ADB trên Termux và điều khiển chính thiết bị đó hoặc thiết bị khác:
+
+1.  **Cài đặt Node.js và ADB:**
+    ```bash
+    pkg update
+    pkg install nodejs-lts android-tools
+    ```
+2.  **Bật Wireless Debugging:**
+    *   Vào *Developer Options* trên điện thoại.
+    *   Bật *Wireless Debugging*.
+    *   Kết nối ADB với chính nó: `adb connect localhost:PORT` (sử dụng port hiển thị trong Wireless Debugging).
+3.  **Chạy Server:**
+    ```bash
+    node dist/index.js
     ```
 
 4.  **Khởi chạy MCP Server:**

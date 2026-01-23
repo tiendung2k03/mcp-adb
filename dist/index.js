@@ -7,11 +7,19 @@ import fs from "fs";
 import path from "path";
 import toml from "toml";
 import { fileURLToPath } from "url";
+import os from "os";
 const execPromise = promisify(exec);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 // Path to the root of the project
 const rootPath = path.resolve(__dirname, "..");
+/**
+ * Helper to get a temporary directory compatible with Termux and Linux
+ */
+function getTempDir() {
+    // In Termux, /tmp might not exist or be writable, use os.tmpdir()
+    return os.tmpdir();
+}
 /**
  * Helper to execute shell commands and return MCP-compatible response
  */
@@ -56,13 +64,16 @@ server.tool("inspect_ui", "Captures the complete UI hierarchy of the current scr
     device: z.string().optional().describe("Optional device ID"),
 }, async ({ device }) => {
     const deviceArg = device ? `-s ${device} ` : "";
-    const tempFile = `/tmp/view-${Date.now()}.xml`;
+    const tempDir = getTempDir();
+    const tempFile = path.join(tempDir, `view-${Date.now()}.xml`);
     try {
-        await execPromise(`adb ${deviceArg}shell uiautomator dump ${tempFile}`);
-        const { stdout } = await execPromise(`adb ${deviceArg}shell cat ${tempFile}`);
-        await execPromise(`adb ${deviceArg}shell rm ${tempFile}`);
+        // For Termux compatibility, we use a more robust way to handle temp files
+        await execPromise(`adb ${deviceArg}shell uiautomator dump /sdcard/view.xml`);
+        await execPromise(`adb ${deviceArg}pull /sdcard/view.xml ${tempFile}`);
+        const content = fs.readFileSync(tempFile, "utf-8");
+        fs.unlinkSync(tempFile);
         return {
-            content: [{ type: "text", text: stdout }],
+            content: [{ type: "text", text: content }],
         };
     }
     catch (error) {
@@ -76,7 +87,8 @@ server.tool("screenshot", "Takes a screenshot of the current screen and returns 
     device: z.string().optional().describe("Optional device ID"),
 }, async ({ device }) => {
     const deviceArg = device ? `-s ${device} ` : "";
-    const tempFile = `/tmp/screen-${Date.now()}.png`;
+    const tempDir = getTempDir();
+    const tempFile = path.join(tempDir, `screen-${Date.now()}.png`);
     try {
         await execPromise(`adb ${deviceArg}shell screencap -p /sdcard/screen.png`);
         await execPromise(`adb ${deviceArg}pull /sdcard/screen.png ${tempFile}`);
